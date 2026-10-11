@@ -8,7 +8,7 @@ Ready-made workflows: [`template/.github/workflows/`](template/.github/workflows
 
 | Workflow | Triggers | Purpose | Duration |
 |---|---|---|---|
-| `ci.yml` | push to `main`, PRs, manual | fmt, clippy, tests (Linux + Windows), wasm check, cargo-deny | ~10–25 min |
+| `ci.yml` | push to `main`, PRs, manual | fmt, clippy, tests (Linux + Windows), wasm check, web build, cargo-deny | ~10–25 min |
 | `windows-arm64.yml` | push to `main`, PRs touching manifests/packaging, weekly | cross-build the ARM64 MSI → install and run it on `windows-11-arm`, native tests on ARM64 | ~30–60 min |
 | `freebsd.yml` | push to `main`, PRs touching manifests | build + test in a FreeBSD 14 VM | up to 5 h |
 | `packaging-lint.yml` | changes to `.github/`, `packaging/`, icons | actionlint, shellcheck, PowerShell parser, xmllint, desktop/AppStream | seconds |
@@ -16,11 +16,16 @@ Ready-made workflows: [`template/.github/workflows/`](template/.github/workflows
 
 General rules (MUST):
 
-- `concurrency: { group: <wf>-${{ github.ref }}, cancel-in-progress: true }` for CI;
-  `cancel-in-progress: false` for releases (never interrupt notarization or uploads).
+- `concurrency: { group: <wf>-${{ github.ref }}, cancel-in-progress: ${{ github.event_name == 'pull_request' }} }`
+  for CI: a new push cancels a PR's older run, but runs on `main` always finish (otherwise two
+  merges in quick succession leave the first one unchecked); `cancel-in-progress: false` for
+  releases (never interrupt notarization or uploads).
 - `permissions: contents: read` by default; `contents: write` only for the `release` job.
 - `env: CARGO_TERM_COLOR: always, RUST_BACKTRACE: 1`; releases also set `CARGO_INCREMENTAL: 0`.
-- Cache: `Swatinem/rust-cache@v2` with a distinct `key` per job/architecture.
+- Cache: `Swatinem/rust-cache@v2` with a distinct `key` per job/architecture. In `ci.yml` only
+  `main` saves (`save-if: ${{ github.ref == 'refs/heads/main' }}`, `cache-on-failure: true`); PRs
+  restore `main`'s cache. A cache saved by a PR serves only that PR, and with GitHub's 10 GB budget
+  per repository such caches evict `main`'s, so every build turns cold.
 - Toolchain: `dtolnay/rust-toolchain@stable` with the needed `components`/`targets`.
 - `--locked` in every build and test, so CI uses exactly the committed `Cargo.lock`.
 - Third-party actions that run your code (VMs, cross-builds) are pinned **by SHA** with a
@@ -32,7 +37,8 @@ General rules (MUST):
 ```
 test (ubuntu-latest) ─┐
 test (windows-latest) ┤
-wasm32 check ─────────┼── independent, in parallel
+wasm32 check ─────────┤
+web build ────────────┼── independent, in parallel
 deny ─────────────────┘
 ```
 
@@ -51,13 +57,16 @@ macOS is **not** run in CI (expensive runners); `release.yml` covers it. If the 
 add `macos-latest` to the matrix (SHOULD for small projects).
 
 Job `wasm`: target `wasm32-unknown-unknown`, `cargo xtask wasm`.
+Job `web`: trunk (the same version as `release.yml`) and `packaging/web/package.sh`, the release
+step itself: trunk's release build, relative URLs, the `#hint` block, the zip. Without it a broken
+`index.html` or `Trunk.toml` would only show up in a release run.
 Job `deny`: `EmbarkStudios/cargo-deny-action@v2` with `command: check`.
 
 MAY: a nightly `schedule` job for long-running checks (pdfcraft runs 15 minutes of mutation
 fuzzing there and uploads findings as an artifact).
 
 Branch protection for `main` (SHOULD): required checks `test (ubuntu-latest)`,
-`test (windows-latest)`, `wasm32 check`, `dependency licences and advisories`.
+`test (windows-latest)`, `wasm32 check`, `web build`, `dependency licences and advisories`.
 
 ## 3. Platform workflows
 

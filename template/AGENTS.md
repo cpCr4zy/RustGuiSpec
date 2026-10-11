@@ -40,6 +40,8 @@ the browser build uses them.
 4. **Dependencies:** the version is declared once in `[workspace.dependencies]`, crates use
    `{ workspace = true }`; `default-features = false` where a crate pulls in extras. Permissive
    licences only (`deny.toml`); git dependencies with a pinned `rev` and listed in `allow-git`.
+   Crates that call the OS directly (objc2, winsafe, x11rb, zbus, …) are pinned exactly
+   (`"=x.y.z"`, the version already in `Cargo.lock`) with a comment on what they are for.
    Before using a crate, check its API in `~/.cargo/registry/src/*/<crate>-<ver>/`, not from memory.
 5. **MSRV:** `rust-version` is not below eframe's MSRV (0.36 → 1.95). Upgrade the whole
    `egui*`/`eframe` group together.

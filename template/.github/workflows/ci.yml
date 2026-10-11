@@ -10,9 +10,11 @@ env:
   CARGO_TERM_COLOR: always
   RUST_BACKTRACE: 1
 
+# A newer push to a PR branch cancels its older run. Runs on main are never cancelled: otherwise two
+# merges in quick succession would leave the first one's main unchecked.
 concurrency:
   group: ci-${{ github.ref }}
-  cancel-in-progress: true
+  cancel-in-progress: ${{ github.event_name == 'pull_request' }}
 
 permissions:
   contents: read
@@ -46,7 +48,13 @@ jobs:
         run: Add-Content -Path $env:GITHUB_ENV -Value 'MYAPP_REQUIRE_WINRES=1'
         shell: pwsh
 
+      # Only main saves caches; PRs restore main's. A cache saved by a PR is usable by that PR only,
+      # and with the repository's 10 GB cache budget such caches evict main's. A failing test still
+      # saves: the cache holds compiled dependencies, not test results.
       - uses: Swatinem/rust-cache@v2
+        with:
+          save-if: ${{ github.ref == 'refs/heads/main' }}
+          cache-on-failure: true
 
       - name: Format
         if: runner.os == 'Linux'
@@ -69,8 +77,35 @@ jobs:
       - uses: Swatinem/rust-cache@v2
         with:
           key: wasm32
+          save-if: ${{ github.ref == 'refs/heads/main' }}
+          cache-on-failure: true
       - name: Check the engine, the UI and the web app for wasm32
         run: cargo xtask wasm
+
+  web:
+    name: web build
+    runs-on: ubuntu-latest
+    env:
+      # The same trunk as release.yml, so a green PR means the browser build would ship.
+      TRUNK_VERSION: 0.21.14
+    steps:
+      - uses: actions/checkout@v7
+      - uses: dtolnay/rust-toolchain@stable
+        with:
+          targets: wasm32-unknown-unknown
+      - uses: Swatinem/rust-cache@v2
+        with:
+          key: web
+          save-if: ${{ github.ref == 'refs/heads/main' }}
+          cache-on-failure: true
+      - name: Install trunk
+        run: |
+          curl -fsSL "https://github.com/trunk-rs/trunk/releases/download/v${TRUNK_VERSION}/trunk-x86_64-unknown-linux-gnu.tar.gz" \
+            | tar -xz -C "$HOME/.cargo/bin" trunk
+          trunk --version
+      # The release step itself: trunk's release build, relative URLs, the #hint block, the zip.
+      - name: Build and package the browser version
+        run: packaging/web/package.sh
 
   deny:
     name: dependency licences and advisories
