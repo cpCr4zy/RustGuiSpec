@@ -2,6 +2,9 @@
 
 use egui_kittest::Harness;
 use egui_kittest::kittest::Queryable;
+
+// A group of its own: rustfmt sorts imports only within a group, so this stays put whatever the
+// project's crate name sorts like after new-project.sh renames it.
 use myapp_ui::MainApp;
 
 #[test]

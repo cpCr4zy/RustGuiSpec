@@ -73,6 +73,14 @@ for path in sys.argv[1:]:
 
 python3 -I "$HERE/placeholder-icons.py" "$DIR" "$APP_ID" "$CRATE"
 
+# The new names can change import order and line lengths, which `cargo fmt --check` (the first CI
+# gate) would reject. Reformat once, so the project starts green.
+if command -v cargo >/dev/null 2>&1; then
+  cargo fmt --all || echo "warning: cargo fmt failed; run it before the first commit" >&2
+else
+  echo "warning: cargo not found; run 'cargo fmt --all' before the first commit" >&2
+fi
+
 # The specification travels with the project, unchanged (it names the placeholders on purpose),
 # together with where and from which template commit the project was made.
 mkdir -p docs
