@@ -314,6 +314,11 @@ Template: [`template/deny.toml`](template/deny.toml).
 - MUST: `Content-Type: application/wasm`, immutable caching for `*.wasm`/`*.js`, `no-cache` for
   `index.html` (`packaging/web/_headers`).
 - SHOULD: watch the `.wasm` size (Cloudflare Pages: ≤ 25 MiB per file).
+- MUST: the web zip explains how to serve it, because a page opened as `file://` stays blank
+  (browsers don't run WebAssembly modules from local files): `packaging/web/README-web.md` goes
+  into the zip, and `index.html` has a `#hint` block under the canvas (HTML/CSS only) that reads
+  "Loading…", is covered once the app draws, and stays visible with instructions when the page
+  can't start. `package.sh` fails if trunk drops it.
 
 ## 10. Versioning and build metadata
 
