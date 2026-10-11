@@ -1,7 +1,9 @@
 # AI instructions: a new Rust GUI project from this template
 
-Template: the `rust-gui-spec` directory that contains this file. Throughout this document
-`<template>` stands for its absolute path (e.g. `~/myprojects/RustGuiSpec`).
+Template: the `RustGuiSpec` repository that contains this file
+(<https://github.com/cpCr4zy/RustGuiSpec>). Throughout this document `<template>` stands for the
+absolute path of a local checkout (e.g. `~/myprojects/RustGuiSpec`). Without one, clone it first:
+`git clone https://github.com/cpCr4zy/RustGuiSpec.git ~/myprojects/RustGuiSpec`.
 
 ## Prompt to paste
 
@@ -94,7 +96,7 @@ skeleton, that is a template bug: tell the user what and where, fix it in the ne
 offer to carry the fix back to the template.
 
 Run the app and look at the window (`cargo run -p <crate>`; take a screenshot if a tool is
-available), then make the first commit: `Initial project from rust-gui-spec template <template commit>`.
+available), then make the first commit: `Initial project from RustGuiSpec template <template commit>`.
 If git has no author name/email configured, ask the user; don't make one up.
 
 ### 5. Adapt it to the application
@@ -143,7 +145,7 @@ After changing `packaging/` or `.github/`, check the syntax (`bash -n`, `xmllint
 
 - Create a remote repository, push, open a PR, push to `release`, publish a release.
 - Add secrets to GitHub.
-- Change the `rust-gui-spec` template itself (only propose it, with a ready diff).
+- Change the `RustGuiSpec` template itself (only propose it, with a ready diff).
 - Change the global git config, or install system packages with `sudo`.
 
 ### Final report

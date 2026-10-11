@@ -79,6 +79,7 @@ mkdir -p docs
 cp "$HERE/SPEC.md" "$HERE/CICD.md" docs/
 {
   echo "template: $HERE"
+  echo "source: $(git -C "$HERE" remote get-url origin 2>/dev/null || echo none)"
   echo "commit: $(git -C "$HERE" rev-parse HEAD 2>/dev/null || echo unknown)"
   echo "created: $(date -u +%Y-%m-%d)"
   echo "crate=$CRATE name=$NAME app_id=$APP_ID repo=$REPO vendor=$VENDOR"
