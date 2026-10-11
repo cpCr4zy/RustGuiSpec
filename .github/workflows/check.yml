@@ -1,0 +1,125 @@
+# Checks the template the way a user meets it: generate a project with new-project.sh and run the
+# project's own gates on it. Required for every pull request to main (repository ruleset).
+name: Template check
+
+on:
+  pull_request:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: template-check-${{ github.ref }}
+  cancel-in-progress: true
+
+env:
+  CARGO_TERM_COLOR: always
+  RUST_BACKTRACE: 1
+  # A hyphenated crate name and a display name with a space: the cases new-project.sh must handle.
+  PROJECT: _generated/note-craft
+
+jobs:
+  project:
+    name: generated project passes cargo xtask ci
+    runs-on: ubuntu-latest
+    timeout-minutes: 45
+    steps:
+      - uses: actions/checkout@v4
+      - name: Install Linux system dependencies (egui/winit/rfd)
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y --no-install-recommends \
+            libxkbcommon-dev libwayland-dev libx11-dev libxrandr-dev libxi-dev \
+            libgl1-mesa-dev libgtk-3-dev
+      - uses: dtolnay/rust-toolchain@stable
+        with:
+          components: clippy, rustfmt
+          targets: wasm32-unknown-unknown
+      - name: Generate the project
+        run: |
+          ./new-project.sh "$PROJECT" note-craft "Note Craft" com.acme.notecraft acme/note-craft "Acme Ltd"
+          cd "$PROJECT"
+          git init -q -b main
+          cargo generate-lockfile
+          test -f docs/template-origin.txt
+          if grep -rIl --exclude-dir=docs -e myapp -e MyApp -e com.example . ; then
+            echo "::error::placeholders left in the generated project"; exit 1
+          fi
+      - uses: Swatinem/rust-cache@v2
+        with:
+          workspaces: ${{ env.PROJECT }} -> target
+      # fmt, clippy -D warnings, tests, the wasm32 check; cargo-deny follows as its own step.
+      - name: cargo xtask ci
+        working-directory: ${{ env.PROJECT }}
+        run: cargo xtask ci
+      - uses: EmbarkStudios/cargo-deny-action@v2
+        with:
+          manifest-path: ${{ env.PROJECT }}/Cargo.toml
+
+  names:
+    name: crate names stay fmt-clean
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+      - uses: dtolnay/rust-toolchain@stable
+        with:
+          components: rustfmt
+      # Names that sort before and after the dependencies' imports, and one long enough to push
+      # lines past max_width: the renames must never break `cargo fmt --check`.
+      - name: Generate and check formatting
+        run: |
+          for crate in a zz a-very-long-crate-name-that-keeps-going-and-going; do
+            ./new-project.sh "_generated/$crate" "$crate" "Test $crate" io.github.test.app "test/$crate" "Tester" >/dev/null
+            (cd "_generated/$crate" && cargo fmt --all -- --check) || { echo "::error::$crate is not fmt-clean"; exit 1; }
+            echo "ok $crate"
+          done
+
+  lint:
+    name: scripts, workflows and packaging lint
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    env:
+      ACTIONLINT_VERSION: 1.7.12
+    steps:
+      - uses: actions/checkout@v4
+      - name: Install tools
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y --no-install-recommends shellcheck desktop-file-utils appstream libxml2-utils
+          curl -fsSL "https://github.com/rhysd/actionlint/releases/download/v${ACTIONLINT_VERSION}/actionlint_${ACTIONLINT_VERSION}_linux_amd64.tar.gz" \
+            | tar -xz -C "$RUNNER_TEMP" actionlint
+      - name: This repository
+        run: |
+          "$RUNNER_TEMP/actionlint" -color
+          shellcheck new-project.sh
+          python3 -m py_compile placeholder-icons.py
+      - name: Generate the project
+        run: ./new-project.sh "$PROJECT" note-craft "Note Craft" com.acme.notecraft acme/note-craft "Acme Ltd"
+      # The same checks as the generated project's packaging-lint.yml, on the generated files.
+      - name: Generated workflows and scripts
+        working-directory: ${{ env.PROJECT }}
+        run: |
+          "$RUNNER_TEMP/actionlint" -color
+          shellcheck packaging/*.sh packaging/*/*.sh
+      - name: Generated PowerShell
+        working-directory: ${{ env.PROJECT }}
+        shell: pwsh
+        run: |
+          foreach ($f in Get-ChildItem packaging/windows/*.ps1) {
+            $errors = $null
+            [System.Management.Automation.Language.Parser]::ParseFile($f.FullName, [ref]$null, [ref]$errors) | Out-Null
+            if ($errors) { $errors | ForEach-Object { Write-Output "::error file=$($f.Name)::$_" }; exit 1 }
+            Write-Output "ok $($f.Name)"
+          }
+      - name: Generated XML, desktop entry, AppStream
+        working-directory: ${{ env.PROJECT }}
+        run: |
+          xmllint --noout packaging/windows/*.wxs packaging/macos/*.plist*
+          desktop-file-validate packaging/linux/*.desktop
+          for f in packaging/linux/*.metainfo.xml.in; do
+            out="$RUNNER_TEMP/$(basename "$f" .in)"
+            sed -e 's/@VERSION@/0.0.0/' -e 's/@DATE@/2026-01-01/' "$f" >"$out"
+            appstreamcli validate --no-net --explain "$out"
+          done

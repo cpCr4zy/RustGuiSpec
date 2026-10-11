@@ -52,6 +52,11 @@ display name with spaces:
 Not runnable here, so left to the workflows on GitHub: MSI (WiX needs Windows), DMG, signing and
 notarization, Flatpak, riscv64, FreeBSD.
 
+Every pull request is checked by [`.github/workflows/check.yml`](.github/workflows/check.yml): it
+generates a project (hyphenated crate name, display name with a space) and runs its `cargo xtask
+ci` and cargo-deny, checks that several crate names stay fmt-clean, and lints the scripts,
+workflows and packaging metadata of the generated project.
+
 ## Taken from pdfcraft, and what was simplified
 
 Taken unchanged: egui/eframe 0.36 versions and features, the wgpu → OpenGL fallback, build
@@ -61,3 +66,10 @@ profiles, lints, `deny.toml`, Windows resources (icon, VERSIONINFO, DPI), every 
 Removed as pdfcraft-specific: OCR models, craft-fonts, fuzzing, asset and layering checks in
 xtask, the CLI and MCP server, single instance, update checks, vendored winit/egui-wgpu patches,
 PDF file associations. SPEC marks them as MAY where they might be needed.
+
+## Licence
+
+The specification, the scripts and the template are licensed under either of
+[Apache License 2.0](LICENSE-APACHE) or [MIT](LICENSE-MIT), at your option. A generated project
+starts with the same dual licence (`template/LICENSE-*`, `license` in `Cargo.toml`); its owner may
+change that.
