@@ -24,6 +24,8 @@ jobs:
     name: generated project passes cargo xtask ci
     runs-on: ubuntu-latest
     timeout-minutes: 45
+    env:
+      CARGO_DENY_VERSION: 0.20.2
     steps:
       - uses: actions/checkout@v4
       - name: Install Linux system dependencies (egui/winit/rfd)
@@ -46,16 +48,24 @@ jobs:
           if grep -rIl --exclude-dir=docs -e myapp -e MyApp -e com.example . ; then
             echo "::error::placeholders left in the generated project"; exit 1
           fi
+      # `cargo xtask ci` insists on cargo-deny when CI is set; the prebuilt release binary, checked.
+      - name: Install cargo-deny
+        run: |
+          name="cargo-deny-${CARGO_DENY_VERSION}-x86_64-unknown-linux-musl"
+          base="https://github.com/EmbarkStudios/cargo-deny/releases/download/${CARGO_DENY_VERSION}"
+          cd "$RUNNER_TEMP"
+          curl -fsSLO "$base/$name.tar.gz"
+          curl -fsSL "$base/$name.tar.gz.sha256" | awk -v f="$name.tar.gz" '{print $1 "  " f}' | sha256sum -c -
+          tar -xzf "$name.tar.gz"
+          install -m755 "$name/cargo-deny" "$HOME/.cargo/bin/cargo-deny"
+          cargo deny --version
       - uses: Swatinem/rust-cache@v2
         with:
           workspaces: ${{ env.PROJECT }} -> target
-      # fmt, clippy -D warnings, tests, the wasm32 check; cargo-deny follows as its own step.
+      # Every gate of a generated project: fmt, clippy -D warnings, tests, wasm32 check, cargo-deny.
       - name: cargo xtask ci
         working-directory: ${{ env.PROJECT }}
         run: cargo xtask ci
-      - uses: EmbarkStudios/cargo-deny-action@v2
-        with:
-          manifest-path: ${{ env.PROJECT }}/Cargo.toml
 
   names:
     name: crate names stay fmt-clean
