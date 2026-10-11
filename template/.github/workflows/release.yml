@@ -41,7 +41,7 @@ jobs:
       date: ${{ steps.v.outputs.date }}
       prerelease: ${{ steps.v.outputs.prerelease }}
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
       - id: v
         name: Resolve version
         run: |
@@ -69,7 +69,7 @@ jobs:
       MYAPP_VERSION: ${{ needs.version.outputs.version }}
       MYAPP_BUILD_DATE: ${{ needs.version.outputs.date }}
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
       - uses: dtolnay/rust-toolchain@stable
         with:
           targets: aarch64-apple-darwin, x86_64-apple-darwin
@@ -91,7 +91,7 @@ jobs:
           APPLE_PASSWORD: ${{ secrets.APPLE_PASSWORD }}
           APPLE_TEAM_ID: ${{ secrets.APPLE_TEAM_ID }}
         run: packaging/macos/package.sh --arch universal
-      - uses: actions/upload-artifact@v4
+      - uses: actions/upload-artifact@v7
         with:
           name: release-macos
           path: dist/release/*
@@ -119,7 +119,7 @@ jobs:
       MYAPP_VERSION: ${{ needs.version.outputs.version }}
       MYAPP_BUILD_DATE: ${{ needs.version.outputs.date }}
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
       - uses: dtolnay/rust-toolchain@stable
         with:
           targets: ${{ matrix.target }}
@@ -145,7 +145,7 @@ jobs:
           AZURE_SIGNING_ACCOUNT: ${{ secrets.AZURE_SIGNING_ACCOUNT }}
           AZURE_CERT_PROFILE: ${{ secrets.AZURE_CERT_PROFILE }}
         run: ./packaging/windows/package.ps1 -Arch ${{ matrix.arch }}
-      - uses: actions/upload-artifact@v4
+      - uses: actions/upload-artifact@v7
         with:
           name: release-windows-${{ matrix.arch }}
           path: dist/release/*
@@ -167,7 +167,7 @@ jobs:
       MYAPP_BUILD_DATE: ${{ needs.version.outputs.date }}
       NFPM_VERSION: 2.47.0
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
       - name: Install build and packaging tools
         run: |
           sudo apt-get update
@@ -198,7 +198,7 @@ jobs:
             "$appimage" --appimage-updateinformation | grep -F 'gh-releases-zsync|'
             test -s "$appimage.zsync"
           done
-      - uses: actions/upload-artifact@v4
+      - uses: actions/upload-artifact@v7
         with:
           name: release-linux-${{ matrix.arch }}
           path: dist/release/*
@@ -214,7 +214,7 @@ jobs:
       MYAPP_VERSION: ${{ needs.version.outputs.version }}
       MYAPP_BUILD_DATE: ${{ needs.version.outputs.date }}
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
       - uses: dtolnay/rust-toolchain@stable
         with:
           targets: riscv64gc-unknown-linux-gnu
@@ -264,7 +264,7 @@ jobs:
         run: |
           tar -tzf "dist/release/myapp-$MYAPP_VERSION-linux-riscv64.tar.gz" | grep -E '/bin/myapp$'
           file target/riscv64gc-unknown-linux-gnu/release/myapp | grep -F 'RISC-V'
-      - uses: actions/upload-artifact@v4
+      - uses: actions/upload-artifact@v7
         with:
           name: release-linux-riscv64
           path: dist/release/*.tar.gz
@@ -285,8 +285,8 @@ jobs:
       MYAPP_VERSION: ${{ needs.version.outputs.version }}
       MYAPP_BUILD_DATE: ${{ needs.version.outputs.date }}
     steps:
-      - uses: actions/checkout@v4
-      - uses: actions/download-artifact@v4
+      - uses: actions/checkout@v7
+      - uses: actions/download-artifact@v8
         with:
           name: release-linux-${{ matrix.arch }}
           path: dist/linux
@@ -299,7 +299,7 @@ jobs:
           sudo sysctl -w kernel.apparmor_restrict_unprivileged_userns=0
       - name: Build the Flatpak bundle
         run: packaging/linux/flatpak-bundle.sh "dist/linux/myapp-$MYAPP_VERSION-linux-${{ matrix.arch }}.tar.gz"
-      - uses: actions/upload-artifact@v4
+      - uses: actions/upload-artifact@v7
         with:
           name: release-flatpak-${{ matrix.arch }}
           path: dist/release/*.flatpak
@@ -316,7 +316,7 @@ jobs:
       MYAPP_BUILD_DATE: ${{ needs.version.outputs.date }}
       VERSION_OVERRIDE: ${{ inputs.version }}
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
       - name: Build and package in a FreeBSD VM (tar.gz)
         # vmactions/freebsd-vm v1.5.9, pinned by commit (it runs our build).
         uses: vmactions/freebsd-vm@c46abacb49f09938ca4e1702d15d836285d694cc
@@ -337,7 +337,7 @@ jobs:
             packaging/freebsd/package.sh
             # Only dist/ comes back out of the VM: copying the target dir back fails on large builds.
             cargo clean
-      - uses: actions/upload-artifact@v4
+      - uses: actions/upload-artifact@v7
         with:
           name: release-freebsd-x86_64
           path: dist/release/*
@@ -352,7 +352,7 @@ jobs:
       MYAPP_BUILD_DATE: ${{ needs.version.outputs.date }}
       TRUNK_VERSION: 0.21.14
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
       - uses: dtolnay/rust-toolchain@stable
         with:
           targets: wasm32-unknown-unknown
@@ -369,7 +369,7 @@ jobs:
         run: cargo xtask version set "$MYAPP_VERSION"
       - name: Build and zip
         run: packaging/web/package.sh
-      - uses: actions/upload-artifact@v4
+      - uses: actions/upload-artifact@v7
         with:
           name: release-web
           path: dist/release/*
@@ -389,7 +389,7 @@ jobs:
       GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
       GH_REPO: ${{ github.repository }}
     steps:
-      - uses: actions/download-artifact@v4
+      - uses: actions/download-artifact@v8
         with:
           pattern: release-*
           path: artifacts
