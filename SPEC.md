@@ -145,16 +145,16 @@ arboard  = { version = "3.6", default-features = false, features = ["image-data"
 pollster = "1.0"                                                                      # wait for async rfd dialogs off the UI thread
 
 [target.'cfg(target_os = "windows")'.dependencies]
-sys-locale = "0.3"        # MAY: the OS interface language
-winsafe    = { version = "0.0.29", default-features = false, features = ["user"] }  # MAY: safe Win32 wrappers
+sys-locale = "=0.3.2"    # MAY: the OS interface language
+winsafe    = { version = "=0.0.29", default-features = false, features = ["user"] }  # MAY: safe Win32 wrappers
 
 [target.'cfg(target_os = "macos")'.dependencies]
-objc2            = "0.6"   # MAY: safe AppKit calls only
-objc2-app-kit    = { version = "0.3", default-features = false, features = ["std", "NSEvent", "NSScreen"] }
-objc2-foundation = { version = "0.3", default-features = false, features = ["std", "NSArray", "NSGeometry"] }
+objc2            = "=0.6.4"   # MAY: safe AppKit calls only
+objc2-app-kit    = { version = "=0.3.2", default-features = false, features = ["std", "NSEvent", "NSScreen"] }
+objc2-foundation = { version = "=0.3.2", default-features = false, features = ["std", "NSArray", "NSGeometry"] }
 
 [target.'cfg(target_os = "linux")'.dependencies]
-zbus = "5"                # MAY: the desktop portal's light/dark preference over D-Bus
+zbus = "=5.19.0"          # MAY: the desktop portal's light/dark preference over D-Bus
 
 [target.'cfg(target_arch = "wasm32")'.dependencies]
 wasm-bindgen         = "0.2"
@@ -165,6 +165,14 @@ web-sys = { version = "0.3", features = ["Window", "Document", "Element", "HtmlC
 [build-dependencies]
 winresource = "0.1"       # icon + VERSIONINFO + manifest in the .exe (used only when target_os = windows)
 ```
+
+Crates that talk to the OS directly (objc2/AppKit, winsafe, x11rb, zbus, native menus and the
+like) MUST be pinned exactly (`objc2 = "=0.6.4"`) with a comment saying what the crate is for.
+Moving the pin is a deliberate change: read the crate's diff, then build and run the app on that
+OS. Neither `cargo update` nor a Dependabot PR may move such code unnoticed (Dependabot still
+opens PRs for exact pins; review them as such). Where winit/eframe already pull a crate in, pin
+the version already in `Cargo.lock`, so the pin adds no second copy. The versions above match
+eframe 0.36's tree; take yours from `Cargo.lock`.
 
 For HTTPS (update checks and the like): `ureq = { version = "3", default-features = false, features = ["rustls-no-provider", "_ring"] }` +
 `rustls-native-certs = "0.8"` (the OS's root certificates, no CDLA-licensed `webpki-roots`).
