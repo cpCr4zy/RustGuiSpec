@@ -1,0 +1,36 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!-- AppStream metadata (software centres, Flathub). package.sh substitutes @VERSION@ and @DATE@. -->
+<component type="desktop-application">
+  <id>com.example.myapp</id>
+  <metadata_license>CC0-1.0</metadata_license>
+  <project_license>MIT OR Apache-2.0</project_license>
+  <name>MyApp</name>
+  <summary>A cross-platform Rust application</summary>
+  <developer id="com.example">
+    <name>Example Org</name>
+  </developer>
+  <description>
+    <p>
+      MyApp is a native, cross-platform desktop application written in Rust with egui. It runs
+      on Windows, macOS, Linux and FreeBSD, and in the browser.
+    </p>
+  </description>
+  <launchable type="desktop-id">com.example.myapp.desktop</launchable>
+  <icon type="stock">com.example.myapp</icon>
+  <url type="homepage">https://github.com/example/myapp</url>
+  <url type="bugtracker">https://github.com/example/myapp/issues</url>
+  <categories>
+    <category>Utility</category>
+  </categories>
+  <supports>
+    <control>keyboard</control>
+    <control>pointing</control>
+  </supports>
+  <provides>
+    <binary>myapp</binary>
+  </provides>
+  <content_rating type="oars-1.1"/>
+  <releases>
+    <release version="@VERSION@" date="@DATE@"/>
+  </releases>
+</component>

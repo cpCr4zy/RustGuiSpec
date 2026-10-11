@@ -1,0 +1,71 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+  MyApp MSI (WiX Toolset v5, installed with `dotnet tool install`). Built by package.ps1:
+
+    wix build myapp.wxs -arch x64 -d Version=1.2.3 -d BinDir=... -d IconPath=... -o out.msi
+
+  Per-machine install into Program Files, a Start Menu shortcut, an optional desktop shortcut
+  (INSTALLDESKTOPSHORTCUT=0 on the msiexec command line skips it) and an App Paths entry.
+  new-project.sh generates the UpgradeCode and component GUIDs once per project: never change the
+  UpgradeCode afterwards, or upgrades install side by side.
+-->
+<Wix xmlns="http://wixtoolset.org/schemas/v4/wxs">
+  <Package
+      Name="MyApp"
+      Manufacturer="Example Org"
+      Version="$(var.Version)"
+      UpgradeCode="@UPGRADE_CODE@"
+      Scope="perMachine"
+      Compressed="yes"
+      Language="1033">
+    <SummaryInformation Description="MyApp" Manufacturer="Example Org" />
+    <!-- Same-version upgrades let successive pre-releases of one X.Y.Z replace each other
+         (MSI versions are numeric, so 1.2.3-rc.1 and 1.2.3-rc.2 are both 1.2.3). -->
+    <MajorUpgrade AllowSameVersionUpgrades="yes" DowngradeErrorMessage="A newer version of MyApp is already installed." />
+    <MediaTemplate EmbedCab="yes" CompressionLevel="high" />
+
+    <!-- Windows Installer needs an Icon id ending in .ico or .exe, or Add/Remove Programs shows a blank icon. -->
+    <Icon Id="AppIcon.ico" SourceFile="$(var.IconPath)" />
+    <Property Id="ARPPRODUCTICON" Value="AppIcon.ico" />
+    <Property Id="ARPURLINFOABOUT" Value="https://github.com/example/myapp" />
+    <Property Id="INSTALLDESKTOPSHORTCUT" Value="1" Secure="yes" />
+
+    <StandardDirectory Id="ProgramFiles6432Folder">
+      <Directory Id="INSTALLFOLDER" Name="MyApp" />
+    </StandardDirectory>
+    <StandardDirectory Id="ProgramMenuFolder" />
+    <StandardDirectory Id="DesktopFolder" />
+
+    <Feature Id="Main" Title="MyApp" Level="1">
+      <ComponentGroupRef Id="AppFiles" />
+    </Feature>
+  </Package>
+
+  <Fragment>
+    <ComponentGroup Id="AppFiles" Directory="INSTALLFOLDER">
+      <Component Id="AppExe" Guid="@GUID_APP@">
+        <File Id="AppExeFile" Source="$(var.BinDir)\myapp.exe" KeyPath="yes" />
+        <RegistryValue Root="HKLM" Key="Software\Microsoft\Windows\CurrentVersion\App Paths\myapp.exe" Value="[#AppExeFile]" Type="string" />
+        <!-- File associations: add a ProgID, OpenWithProgids, Capabilities and RegisteredApplications
+             here (see pdfcraft.wxs) so the app is offered under "Open with" without taking over. -->
+      </Component>
+
+      <!-- Plain (not advertised) shortcuts, each with an HKLM key path so uninstall removes it. -->
+      <Component Id="AppStartMenuShortcut" Directory="ProgramMenuFolder" Guid="@GUID_STARTMENU@">
+        <Shortcut Id="StartMenuShortcut" Name="MyApp" Target="[#AppExeFile]" WorkingDirectory="INSTALLFOLDER" Icon="AppIcon.ico" IconIndex="0" />
+        <RegistryValue Root="HKLM" Key="Software\MyApp\Shortcuts" Name="StartMenu" Type="integer" Value="1" KeyPath="yes" />
+      </Component>
+      <Component Id="AppDesktopShortcut" Directory="DesktopFolder" Guid="@GUID_DESKTOP@" Condition="INSTALLDESKTOPSHORTCUT = 1">
+        <Shortcut Id="DesktopShortcut" Name="MyApp" Target="[#AppExeFile]" WorkingDirectory="INSTALLFOLDER" Icon="AppIcon.ico" IconIndex="0" />
+        <RegistryValue Root="HKLM" Key="Software\MyApp\Shortcuts" Name="Desktop" Type="integer" Value="1" KeyPath="yes" />
+      </Component>
+
+      <Component Id="AppMitLicense">
+        <File Id="AppMitLicenseFile" Source="$(var.BinDir)\LICENSE-MIT" KeyPath="yes" />
+      </Component>
+      <Component Id="AppApacheLicense">
+        <File Id="AppApacheLicenseFile" Source="$(var.BinDir)\LICENSE-APACHE" KeyPath="yes" />
+      </Component>
+    </ComponentGroup>
+  </Fragment>
+</Wix>

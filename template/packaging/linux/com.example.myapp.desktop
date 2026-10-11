@@ -1,0 +1,11 @@
+[Desktop Entry]
+Type=Application
+Name=MyApp
+Comment=A cross-platform Rust application
+Exec=myapp %U
+TryExec=myapp
+Icon=com.example.myapp
+Terminal=false
+StartupNotify=true
+StartupWMClass=com.example.myapp
+Categories=Utility;
