@@ -8,9 +8,9 @@ Rust (Windows, macOS, Linux, FreeBSD, Web), derived from the `pdfcraft` project.
 | [AI-INSTRUCTIONS.md](AI-INSTRUCTIONS.md) | instructions and a ready-to-paste prompt for an AI agent creating a project from this template |
 | [SPEC.md](SPEC.md) | platforms, toolchain, workspace layout, every dependency and feature, system packages, lints, licence policy, application requirements, versioning, signing |
 | [CICD.md](CICD.md) | every GitHub Actions workflow, matrices, secrets, release process, repository setup |
-| [template/](template/) | a working project skeleton with the placeholders `myapp` / `MyApp` / `com.example.myapp` |
+| [template/](template/) | a working project skeleton with the placeholders `myapp` / `MyApp` / `com.example.myapp`; it builds as is (`cargo run -p myapp` inside it), placeholder icons included |
 | [new-project.sh](new-project.sh) | creates a new project from the template and fills in the names |
-| [placeholder-icons.py](placeholder-icons.py) | writes placeholder icons (PNG, ICO, ICNS, SVG) so the project builds right away |
+| [placeholder-icons.py](placeholder-icons.py) | writes placeholder icons (PNG, ICO, ICNS, SVG); `new-project.sh` runs it, and it made the ones in `template/assets/app-icon/` |
 
 ## New project
 

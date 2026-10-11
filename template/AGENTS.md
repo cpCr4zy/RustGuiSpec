@@ -22,7 +22,7 @@ commit are in `docs/template-origin.txt`.
 | `crates/ui` | `MainApp: eframe::App`, shared by desktop and web | desktop-only code under `#[cfg(not(target_arch = "wasm32"))]` |
 | `apps/myapp` | desktop binary | thin: arguments, logging, window, wgpu → OpenGL fallback |
 | `apps/myapp-web` | wasm binary (trunk) | no handwritten JS |
-| `xtask` | `cargo xtask version | ci | wasm | deny` | automation in Rust only |
+| `xtask` | `cargo xtask` with `version`, `ci`, `wasm`, `deny` | automation in Rust only |
 | `packaging/` | installers for every platform | artifact names: `myapp-<version>-<platform>-<arch>.<ext>` |
 
 New library crates go in `crates/` and are added to `cargo xtask wasm` (`xtask/src/main.rs`) if

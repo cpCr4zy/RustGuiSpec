@@ -1,3 +1,7 @@
 # Python by-products of placeholder-icons.py, which may be run from this directory.
 __pycache__/
 *.pyc
+
+# Building the template in place (cargo run -p myapp in template/) writes a lockfile; generated
+# projects make and commit their own, so the template does not carry one.
+/template/Cargo.lock
