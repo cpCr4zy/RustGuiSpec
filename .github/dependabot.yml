@@ -1,0 +1,11 @@
+# The template's own workflows (template/.github/workflows) are what every new project starts
+# with, so keep their actions current too; this repository's CI is checked as well.
+version: 2
+updates:
+  - package-ecosystem: github-actions
+    directories: ["/", "/template"]
+    schedule:
+      interval: weekly
+    groups:
+      artifact-actions:
+        patterns: ["actions/upload-artifact", "actions/download-artifact"]

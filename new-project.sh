@@ -23,6 +23,7 @@ HERE="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 UPPER="$(printf '%s' "$CRATE" | tr 'a-z-' 'A-Z_')"
 guid() { python3 -c 'import uuid; print(str(uuid.uuid4()).upper())'; }
 
+mkdir -p "$(dirname "$DIR")"
 cp -R "$HERE/template" "$DIR"
 cd "$DIR"
 
